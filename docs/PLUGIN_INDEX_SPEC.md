@@ -235,7 +235,9 @@ https://raw.githubusercontent.com/owner/repo/branch/plugins.json
 
 - **README.md**: 提供简化说明与操作指南，面向开发者快速上手
 - **本文档**: 是 plugins.json 的详细规范，优先级更高，用于精确理解和实现
+- **PLUGIN_DEV_GUIDE.md**: 插件开发指南，包含 SDK 使用和事件系统教程
 - **THIRD_PARTY_HUB_GUIDE.md**: 第三方 Hub 建设的具体教程和最佳实践
+- **examples/sdk_event_demo/**: 完整的插件开发示例和 skeleton 模板
 
 ## 更新日志
 
@@ -245,6 +247,13 @@ https://raw.githubusercontent.com/owner/repo/branch/plugins.json
 - 提供完整的插件元数据字段
 - 支持扩展点声明和自定义扩展信息
 - 明确多 Hub 生态的架构设计
+
+## 进一步阅读
+
+- [插件开发指南](PLUGIN_DEV_GUIDE.md) - 学习如何使用 VabHub 插件 SDK 和事件系统
+- [第三方 Hub 指南](THIRD_PARTY_HUB_GUIDE.md) - 创建和维护自己的插件 Hub
+- [示例插件 Skeleton](../examples/sdk_event_demo/) - 完整的开发模板和参考代码
+- 主仓库文档：`docs/PLUGIN_SDK_OVERVIEW.md` - 详细的 SDK API 参考（路径以主仓库为准）
 
 ## 质量保证建议
 

@@ -138,8 +138,57 @@ VabHub 主程序只需要你的 `plugins.json` 的 URL（通常通过 GitHub Pag
 
 > **参考资源**：
 > - [详细规范文档](docs/PLUGIN_INDEX_SPEC.md)
+> - [插件开发指南](docs/PLUGIN_DEV_GUIDE.md) - SDK 和事件系统使用教程
 > - [第三方 Hub 完整指南](docs/THIRD_PARTY_HUB_GUIDE.md)
+> - [示例插件 Skeleton](examples/sdk_event_demo/) - 完整的开发示例
 > - 本仓库的 `plugins.json` 作为参考示例
+
+## 插件开发概览（基于 VabHub 插件 SDK）
+
+### 插件运行环境
+
+VabHub 插件是标准的 Python 包，由 VabHub 主程序在运行时动态加载。每个插件在独立的 Python 环境中运行，通过 VabHub 插件 SDK 与主程序进行交互。
+
+当插件被加载时，主程序会自动调用插件的入口函数（如果存在）：
+
+```python
+def setup_plugin(ctx: PluginContext, bus: EventBus, sdk: VabHubSDK) -> None:
+    """插件初始化入口函数"""
+    pass
+```
+
+### 核心概念
+
+VabHub 插件 SDK 基于以下三个核心概念：
+
+| 概念 | 说明 |
+|------|------|
+| **PluginContext** | 插件上下文，提供插件的运行环境信息和配置 |
+| **EventBus** | 事件总线，用于订阅和发布系统事件 |
+| **VabHubSDK** | 插件 API 接口，提供日志、配置、HTTP 客户端等功能 |
+
+### 最小插件示例
+
+以下是一个完整的插件最小实现：
+
+```python
+# my_plugin/plugin.py
+from app.plugin_sdk.context import PluginContext
+from app.plugin_sdk.api import VabHubSDK
+from app.plugin_sdk.events import EventBus, EventType
+
+def setup_plugin(ctx: PluginContext, bus: EventBus, sdk: VabHubSDK) -> None:
+    """插件初始化函数"""
+    sdk.log.info("插件已加载")
+    
+    # 订阅漫画更新事件
+    async def on_manga_updated(event: EventType, payload: dict):
+        sdk.log.info(f"漫画更新事件: {payload}")
+        
+    bus.subscribe(EventType.MANGA_UPDATED, on_manga_updated)
+```
+
+详细的 SDK API 和完整功能列表，请参阅 **主仓库文档：`docs/PLUGIN_SDK_OVERVIEW.md`**。
 
 ## 如何参与本仓库（官方 Hub）的贡献
 
@@ -221,4 +270,6 @@ vabhub-plugins/
 - 提交 GitHub Issue
 - 发起 Pull Request
 - 查看 [规范文档](docs/PLUGIN_INDEX_SPEC.md) 了解更多技术细节
+- 阅读 [插件开发指南](docs/PLUGIN_DEV_GUIDE.md) 学习 SDK 使用
 - 阅读 [第三方 Hub 指南](docs/THIRD_PARTY_HUB_GUIDE.md) 获取完整教程
+- 参考 [示例插件](examples/sdk_event_demo/) 开始开发
