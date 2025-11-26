@@ -1,0 +1,31 @@
+{
+  "hub_name": "VabHub Official Plugin Hub",
+  "hub_version": 1,
+  "plugins": [
+    {
+      "id": "vabhub-hello-world",
+      "name": "Hello World 示例插件",
+      "description": "演示 Search / BotCommand / UI Panel 等扩展点的官方示例插件（占位条目）。",
+      "author": "VabHub",
+      "tags": ["official", "example"],
+
+      "homepage": "https://github.com/<your_github_owner>/vabhub-plugins",
+      "repo": "https://github.com/<your_github_owner>/vabhub-hello-world",
+      "download_url": "https://github.com/<your_github_owner>/vabhub-hello-world/archive/refs/heads/main.zip",
+
+      "min_core_version": "0.9.0",
+      "enabled_by_default": false,
+
+      "supports": {
+        "search": true,
+        "bot_commands": true,
+        "ui_panels": true,
+        "workflows": false
+      },
+
+      "panels": [
+        "home_dashboard"
+      ]
+    }
+  ]
+}
