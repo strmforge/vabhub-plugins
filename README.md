@@ -147,15 +147,15 @@ VabHub 主程序只需要你的 `plugins.json` 的 URL（通常通过 GitHub Pag
 
 ### 插件运行环境
 
-VabHub 插件是标准的 Python 包，由 VabHub 主程序在运行时动态加载。每个插件在独立的 Python 环境中运行，通过 VabHub 插件 SDK 与主程序进行交互。
-
-当插件被加载时，主程序会自动调用插件的入口函数（如果存在）：
+VabHub 插件是运行在 VabHub 主程序中的 Python 包，主程序在加载插件时，会寻找并调用它的入口函数：
 
 ```python
 def setup_plugin(ctx: PluginContext, bus: EventBus, sdk: VabHubSDK) -> None:
     """插件初始化入口函数"""
     pass
 ```
+
+插件通过 `sdk` 调用主系统能力，通过 `bus` 订阅业务事件。
 
 ### 核心概念
 
@@ -172,23 +172,21 @@ VabHub 插件 SDK 基于以下三个核心概念：
 以下是一个完整的插件最小实现：
 
 ```python
-# my_plugin/plugin.py
 from app.plugin_sdk.context import PluginContext
 from app.plugin_sdk.api import VabHubSDK
 from app.plugin_sdk.events import EventBus, EventType
 
 def setup_plugin(ctx: PluginContext, bus: EventBus, sdk: VabHubSDK) -> None:
-    """插件初始化函数"""
-    sdk.log.info("插件已加载")
-    
-    # 订阅漫画更新事件
-    async def on_manga_updated(event: EventType, payload: dict):
-        sdk.log.info(f"漫画更新事件: {payload}")
-        
-    bus.subscribe(EventType.MANGA_UPDATED, on_manga_updated)
+    sdk.log.info("Plugin loaded!")
+
+    async def on_manga_updated(event: EventType, payload: dict) -> None:
+        sdk.log.info(f"Manga updated: {payload}")
+
+    # source 用于在卸载插件时清理订阅，建议传 ctx.plugin_id
+    bus.subscribe(EventType.MANGA_UPDATED, on_manga_updated, source=ctx.plugin_id)
 ```
 
-详细的 SDK API 和完整功能列表，请参阅 **主仓库文档：`docs/PLUGIN_SDK_OVERVIEW.md`**。
+**重要提示**：本文只介绍概念与示例，完整的 SDK API 和功能列表请参见 VabHub 主仓库文档：`docs/PLUGIN_SDK_OVERVIEW.md`。
 
 ## 如何参与本仓库（官方 Hub）的贡献
 
@@ -263,6 +261,13 @@ vabhub-plugins/
     workflows/                 # CI 工作流
       validate-plugins.yml     # JSON 格式校验
 ```
+
+## 开发者文档
+
+- [插件索引规范](docs/PLUGIN_INDEX_SPEC.md) - plugins.json 格式规范
+- [插件开发指南（基于 SDK + 事件系统）](docs/PLUGIN_DEV_GUIDE.md) - 插件开发使用 SDK 的说明
+- [第三方 Hub 指南](docs/THIRD_PARTY_HUB_GUIDE.md) - 创建和维护自己的插件 Hub
+- [示例插件](examples/sdk_event_demo/) - 基于 SDK + EventBus 的开发示例
 
 ## 联系我们
 

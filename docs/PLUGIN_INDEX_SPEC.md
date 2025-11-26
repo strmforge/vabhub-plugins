@@ -8,6 +8,8 @@
 
 主程序会定期拉取此文件并解析其中的插件信息，用于在 Web UI 的「Plugin Hub」页面展示插件列表、支持搜索、分类等功能。
 
+插件本身通过 VabHub 主程序提供的 plugin_sdk 与宿主交互，详情参见主仓库文档 `PLUGIN_SDK_OVERVIEW.md` 及本仓库 `PLUGIN_DEV_GUIDE.md`。
+
 ### 适用于所有插件 Hub
 
 本规范既适用于官方 Hub（strmforge/vabhub-plugins），也适用于第三方自建 Hub。VabHub 主程序只要看到一个兼容的 `plugins.json`，就能把其中的插件合并到市场视图。
