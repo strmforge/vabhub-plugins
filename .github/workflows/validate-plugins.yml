@@ -128,7 +128,7 @@ jobs:
         node -e "
           const fs = require('fs');
           const data = JSON.parse(fs.readFileSync('plugins.json', 'utf8'));
-          const urlRegex = /^https?:\\/\\/\\/[^\\s/$.?#].[^\\s]*$/i;
+          const urlRegex = /^https?:\\/\\/[^\\s/$.?#].[^\\s]*$/i;
           
           data.plugins.forEach((plugin, index) => {
             ['repo_url', 'author_url', 'homepage', 'readme_url'].forEach(field => {
