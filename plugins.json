@@ -3,6 +3,21 @@
   "hub_version": 1,
   "plugins": [
     {
+      "id": "hello-world",
+      "name": "Hello World 示例插件",
+      "summary": "最小可用的示例条目，用于说明 plugins.json 的写法。",
+      "description": "此条目仅作为文档示例使用，实际插件实现可在未来单独仓库中提供。",
+      "version": "0.1.0",
+      "repo_url": "https://github.com/strmforge/vabhub-plugin-hello-world",
+      "author_name": "VabHub 官方",
+      "author_url": "https://github.com/strmforge",
+      "channel": "official",
+      "tags": ["example", "hello-world"],
+      "homepage": null,
+      "readme_url": null,
+      "extra": {}
+    },
+    {
       "id": "vabhub-hello-world",
       "name": "Hello World 示例插件",
       "summary": "演示 Search / BotCommand / UI Panel 等扩展点的官方示例插件",
@@ -29,19 +44,6 @@
           "home_dashboard"
         ]
       }
-    },
-    {
-      "id": "hello-world",
-      "name": "Hello World 示例插件",
-      "summary": "最小可用的演示条目，用于说明 plugins.json 写法。",
-      "description": "此条目仅作为文档示例使用，对应的插件实现可根据未来实际仓库地址补全。这是一个最简化的插件条目，展示了必需的字段结构。",
-      "version": "0.1.0",
-      "repo_url": "https://github.com/strmforge/vabhub-plugin-hello-world",
-      "author_name": "VabHub 官方",
-      "author_url": "https://github.com/strmforge",
-      "channel": "official",
-      "tags": ["example", "hello-world"],
-      "extra": {}
     }
   ]
 }
