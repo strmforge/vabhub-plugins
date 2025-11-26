@@ -1,0 +1,100 @@
+name: Validate plugins.json
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  push:
+    branches: [ main, master ]
+
+jobs:
+  validate-json:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Validate plugins.json format
+      run: |
+        echo "Validating plugins.json format..."
+        node -e "
+          try {
+            const fs = require('fs');
+            const data = JSON.parse(fs.readFileSync('plugins.json', 'utf8'));
+            console.log('✅ plugins.json is valid JSON');
+            console.log('📊 Total plugins:', data.plugins.length);
+            
+            // Basic structure validation
+            if (!data.hub_name || !data.hub_version || !Array.isArray(data.plugins)) {
+              throw new Error('Invalid top-level structure');
+            }
+            console.log('✅ Top-level structure is valid');
+            
+            // Validate each plugin entry
+            data.plugins.forEach((plugin, index) => {
+              const required = ['id', 'name', 'version', 'repo_url', 'author_name', 'author_url', 'channel'];
+              required.forEach(field => {
+                if (!plugin[field]) {
+                  throw new Error(\`Plugin at index \${index} missing required field: \${field}\`);
+                }
+              });
+            });
+            console.log('✅ All plugin entries have required fields');
+            
+          } catch (error) {
+            console.error('❌ Validation failed:', error.message);
+            process.exit(1);
+          }
+        "
+        
+    - name: Check for JSON syntax errors using jq
+      run: |
+        # Install jq if not present
+        if ! command -v jq &> /dev/null; then
+          sudo apt-get update && sudo apt-get install -y jq
+        fi
+        
+        echo "Validating with jq..."
+        if jq '.' plugins.json > /dev/null; then
+          echo "✅ jq validation passed"
+        else
+          echo "❌ jq validation failed"
+          exit 1
+        fi
+        
+    - name: Check JSON formatting
+      run: |
+        echo "Checking JSON formatting consistency..."
+        node -e "
+          const fs = require('fs');
+          const content = fs.readFileSync('plugins.json', 'utf8');
+          
+          // Check for trailing commas
+          if (content.includes(',\\n    }') || content.includes(',\\n  }')) {
+            console.error('❌ Found trailing commas');
+            process.exit(1);
+          }
+          
+          // Check for consistent indentation (2 spaces)
+          const lines = content.split('\\n');
+          let hasInconsistentIndentation = false;
+          
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (line.trim() && line.includes('\\t')) {
+              console.error(\`❌ Tab character found at line \${i + 1}\`);
+              hasInconsistentIndentation = true;
+            }
+          }
+          
+          if (hasInconsistentIndentation) {
+            process.exit(1);
+          }
+          
+          console.log('✅ JSON formatting is consistent');
+        "

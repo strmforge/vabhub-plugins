@@ -5,14 +5,14 @@
     {
       "id": "hello-world",
       "name": "Hello World 示例插件",
-      "summary": "最小可用的示例条目，用于说明 plugins.json 的写法。",
-      "description": "此条目仅作为文档示例使用，实际插件实现可在未来单独仓库中提供。",
+      "summary": "用于文档示例的条目，不代表实际可安装插件。",
+      "description": "此条目仅作为文档示例使用，实际插件实现可在未来单独仓库中提供。主要用于演示 plugins.json 的标准写法和字段结构。",
       "version": "0.1.0",
       "repo_url": "https://github.com/strmforge/vabhub-plugin-hello-world",
       "author_name": "VabHub 官方",
       "author_url": "https://github.com/strmforge",
       "channel": "official",
-      "tags": ["example", "hello-world"],
+      "tags": ["example", "docs-only", "hello-world"],
       "homepage": null,
       "readme_url": null,
       "extra": {}
