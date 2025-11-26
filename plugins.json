@@ -5,27 +5,43 @@
     {
       "id": "vabhub-hello-world",
       "name": "Hello World 示例插件",
-      "description": "演示 Search / BotCommand / UI Panel 等扩展点的官方示例插件（占位条目）。",
-      "author": "VabHub",
-      "tags": ["official", "example"],
-
-      "homepage": "https://github.com/<your_github_owner>/vabhub-plugins",
-      "repo": "https://github.com/<your_github_owner>/vabhub-hello-world",
-      "download_url": "https://github.com/<your_github_owner>/vabhub-hello-world/archive/refs/heads/main.zip",
-
-      "min_core_version": "0.9.0",
-      "enabled_by_default": false,
-
-      "supports": {
-        "search": true,
-        "bot_commands": true,
-        "ui_panels": true,
-        "workflows": false
-      },
-
-      "panels": [
-        "home_dashboard"
-      ]
+      "summary": "演示 Search / BotCommand / UI Panel 等扩展点的官方示例插件",
+      "description": "这是一个官方示例插件，用于演示 VabHub 插件系统的各种扩展点功能，包括搜索扩展、Bot 命令扩展和 UI 面板扩展等。开发者可以参考此插件的实现来了解如何开发自己的插件。",
+      "version": "0.1.0",
+      "repo_url": "https://github.com/strmforge/vabhub-hello-world",
+      "author_name": "VabHub 官方",
+      "author_url": "https://github.com/strmforge",
+      "channel": "official",
+      "tags": ["official", "example", "demo"],
+      "features": ["search", "bot_commands", "ui_panels"],
+      "homepage": "https://github.com/strmforge/vabhub-plugins",
+      "readme_url": "https://raw.githubusercontent.com/strmforge/vabhub-hello-world/main/README.md",
+      "extra": {
+        "min_core_version": "0.9.0",
+        "enabled_by_default": false,
+        "supports": {
+          "search": true,
+          "bot_commands": true,
+          "ui_panels": true,
+          "workflows": false
+        },
+        "panels": [
+          "home_dashboard"
+        ]
+      }
+    },
+    {
+      "id": "hello-world",
+      "name": "Hello World 示例插件",
+      "summary": "最小可用的演示条目，用于说明 plugins.json 写法。",
+      "description": "此条目仅作为文档示例使用，对应的插件实现可根据未来实际仓库地址补全。这是一个最简化的插件条目，展示了必需的字段结构。",
+      "version": "0.1.0",
+      "repo_url": "https://github.com/strmforge/vabhub-plugin-hello-world",
+      "author_name": "VabHub 官方",
+      "author_url": "https://github.com/strmforge",
+      "channel": "official",
+      "tags": ["example", "hello-world"],
+      "extra": {}
     }
   ]
 }
