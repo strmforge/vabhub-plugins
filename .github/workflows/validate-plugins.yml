@@ -43,6 +43,11 @@ jobs:
                   throw new Error(\`Plugin at index \${index} missing required field: \${field}\`);
                 }
               });
+              
+              // Warn about community plugins in official hub
+              if (plugin.channel === 'community') {
+                console.warn(\`⚠️  Plugin '\${plugin.id}' uses channel 'community'. Consider moving it to a third-party hub.\`);
+              }
             });
             console.log('✅ All plugin entries have required fields');
             
@@ -97,4 +102,44 @@ jobs:
           }
           
           console.log('✅ JSON formatting is consistent');
+        "
+        
+    - name: Check for duplicate plugin IDs
+      run: |
+        echo "Checking for duplicate plugin IDs..."
+        node -e "
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('plugins.json', 'utf8'));
+          const ids = data.plugins.map(p => p.id);
+          const uniqueIds = new Set(ids);
+          
+          if (ids.length !== uniqueIds.size) {
+            const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
+            console.error('❌ Found duplicate plugin IDs:', duplicates);
+            process.exit(1);
+          }
+          
+          console.log('✅ No duplicate plugin IDs found');
+        "
+        
+    - name: Validate plugin URLs
+      run: |
+        echo "Validating plugin URLs (basic format check)..."
+        node -e "
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('plugins.json', 'utf8'));
+          const urlRegex = /^https?:\\/\\/\\/[^\\s/$.?#].[^\\s]*$/i;
+          
+          data.plugins.forEach((plugin, index) => {
+            ['repo_url', 'author_url', 'homepage', 'readme_url'].forEach(field => {
+              if (plugin[field] && plugin[field] !== null) {
+                if (!urlRegex.test(plugin[field])) {
+                  console.error(\`❌ Plugin '\${plugin.id}' has invalid \${field}: \${plugin[field]}\`);
+                  process.exit(1);
+                }
+              }
+            });
+          });
+          
+          console.log('✅ All plugin URLs have valid format');
         "
