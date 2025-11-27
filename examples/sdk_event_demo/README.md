@@ -35,10 +35,40 @@ def setup_plugin(ctx: PluginContext, bus: EventBus, sdk: VabHubSDK) -> None:
 
 插件作者可以复制这段结构到自己的插件项目中，作为开发起点。
 
+## 进阶：宿主服务 & 权限声明
+
+当前示例只展示了基本的事件订阅功能。如果要使用更高级的宿主服务（下载、媒体库查询、115 操作等），需要：
+
+1. **声明权限**：在 `plugin.json` 中添加 `sdk_permissions` 字段
+2. **调用宿主服务**：使用 `sdk.download`、`sdk.media`、`sdk.cloud115` 等方法
+
+示例：
+```python
+# 在 setup_plugin 中使用宿主服务
+async def on_manga_updated(event: EventType, payload: dict) -> None:
+    # 检查媒体库（需要 media.read 权限）
+    exists = await sdk.media.has_manga(series_id=payload.get("series_id"))
+    if exists:
+        return
+    
+    # 创建下载任务（需要 download.write 权限）
+    url = payload.get("download_url")
+    if url:
+        task_id = await sdk.download.add_task(url)
+        sdk.log.info(f"Created download task: {task_id}")
+```
+
+对应权限声明：
+```json
+{
+  "sdk_permissions": ["media.read", "download.write"]
+}
+```
+
 ## 进一步学习
 
-实际的事件类型、payload 字段详情请参见主仓库文档 `docs/PLUGIN_SDK_OVERVIEW.md`。
+实际的事件类型、payload 字段、宿主服务详情请参见主仓库文档 `docs/PLUGIN_SDK_OVERVIEW.md`。
 
 更完整的开发指南请参考：
-- [插件开发指南](../../docs/PLUGIN_DEV_GUIDE.md)
+- [插件开发指南](../../docs/PLUGIN_DEV_GUIDE.md) - 包含宿主服务的详细说明
 - [插件索引规范](../../docs/PLUGIN_INDEX_SPEC.md)

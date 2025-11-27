@@ -162,6 +162,112 @@ bus.subscribe("my_custom_event", {
 
 **当前可用的事件类型列表及 payload 字段说明，请参见主仓库 `docs/PLUGIN_SDK_OVERVIEW.md` 中的「事件列表」章节。**
 
+## 宿主服务与 sdk_permissions（可选高级功能）
+
+### 权限声明基础
+
+插件默认只可用：日志、HTTP、通知、事件订阅等"安全能力"；
+
+想调用「下载 / 媒体库 / 115」等高权限操作，需要在 `plugin.json` 的 `sdk_permissions` 里显式声明：
+
+```json
+{
+  "id": "my_awesome_plugin",
+  "name": "My Awesome Plugin",
+  "version": "1.0.0",
+  "sdk_permissions": [
+    "media.read",
+    "download.write"
+  ],
+  "channel": "community",
+  "repo_url": "https://github.com/myname/awesome-plugin",
+  "author_name": "My Name",
+  "author_url": "https://github.com/myname"
+}
+```
+
+**重要提醒**：不声明就调用高权限方法，会在日志中看到拒绝，并收到明确错误。推荐插件作者只申请真正用得到的权限。
+
+### 宿主服务概览（摘要级）
+
+#### 下载服务：sdk.download
+
+**核心方法**：
+- `sdk.download.add_task(url: str) -> task_id`：创建下载任务
+- `sdk.download.get_task(task_id) -> TaskInfo`：获取任务详情
+- `sdk.download.list_tasks() -> List[TaskInfo]`：列出所有任务
+
+**示例用途**：插件检测到新资源后，触发一个下载任务。
+
+**需要权限**：
+- `download.write`：用于 `add_task`
+- `download.read`：用于 `get_task` 和 `list_tasks`
+
+#### 媒体库查询：sdk.media
+
+**核心方法**：
+- `sdk.media.has_movie(...)`：检查电影是否存在
+- `sdk.media.has_tv(...)`：检查剧集是否存在
+- `sdk.media.has_audiobook(...)`：检查有声书是否存在
+- `sdk.media.has_manga(...)`：检查漫画是否存在
+- `sdk.media.search_media(...)`：根据关键字在媒体库中搜索
+
+**示例用途**：用于"避免重复下载 / 入库"的检查。
+
+**需要权限**：`media.read`
+
+#### 115 集成：sdk.cloud115
+
+**核心方法**：
+- `sdk.cloud115.is_available() -> bool`：检查主系统是否配置了 115
+- `sdk.cloud115.add_offline_task(url: str) -> task_id`：创建 115 离线任务
+- `sdk.cloud115.list_dir(path: str) -> List[FileInfo]`：列出目录内容
+- `sdk.cloud115.get_storage_info() -> StorageInfo`：获取存储空间信息
+
+**示例用途**：配合 VabHub 的 115 云存储功能，自动离线下载或管理文件。
+
+**需要权限**：
+- `cloud115.task`：用于 `add_offline_task`
+- `cloud115.read`：用于 `list_dir` 和 `get_storage_info`
+
+> **注意**：更详细的参数 & 返回值，请参见主仓库 `PLUGIN_SDK_OVERVIEW.md` 中的「宿主服务封装」章节。
+
+### 综合示例
+
+以下是一个结合了宿主服务的示例插件逻辑：
+
+```python
+from app.plugin_sdk.context import PluginContext
+from app.plugin_sdk.api import VabHubSDK
+from app.plugin_sdk.events import EventBus, EventType
+
+async def setup_plugin(ctx: PluginContext, bus: EventBus, sdk: VabHubSDK) -> None:
+    sdk.log.info("My auto-download plugin loaded")
+
+    async def on_manga_updated(event: EventType, payload: dict) -> None:
+        # 1. 检查媒体库是否已存在
+        exists = await sdk.media.has_manga(series_id=payload.get("series_id"))
+        if exists:
+            sdk.log.info("Manga already in library, skip download.")
+            return
+
+        # 2. 若不存在，发起一个下载任务（具体资源 URL 由插件逻辑决定）
+        url = payload.get("download_url")
+        if not url:
+            sdk.log.warning("No download_url in payload, skip.")
+            return
+
+        task_id = await sdk.download.add_task(url)
+        sdk.log.info(f"Created download task: {task_id}")
+
+    bus.subscribe(EventType.MANGA_UPDATED, on_manga_updated, source=ctx.plugin_id)
+```
+
+**重要**：这个示例需要在 `plugin.json` 中声明：
+```json
+"sdk_permissions": ["media.read", "download.write"]
+```
+
 ## 完整插件示例
 
 以下是一个完整的插件示例，展示基本的开发模式：

@@ -188,6 +188,31 @@ def setup_plugin(ctx: PluginContext, bus: EventBus, sdk: VabHubSDK) -> None:
 
 **重要提示**：本文只介绍概念与示例，完整的 SDK API 和功能列表请参见 VabHub 主仓库文档：`docs/PLUGIN_SDK_OVERVIEW.md`。
 
+### 插件权限（sdk_permissions）与宿主服务
+
+从 SDK v2 起，插件可以通过 `sdk_permissions` 声明自己需要使用的宿主能力，例如下载、媒体库查询、115 操作；主程序根据 `sdk_permissions` 决定是否允许插件调用对应 `sdk.download` / `sdk.media` / `sdk.cloud115` 方法。
+
+在 `plugin.json` 中声明权限示例：
+
+```json
+{
+  "id": "vabhub.my_plugin",
+  "name": "我的插件",
+  "version": "0.1.0",
+  "sdk_permissions": [
+    "media.read",
+    "download.write"
+  ],
+  "backend": {
+    "entry_module": "my_plugin.main"
+  }
+}
+```
+
+**sdk_permissions** 支持的值列表，以及对应的风险等级，请以主仓库文档 `PLUGIN_SDK_OVERVIEW.md` 为准；本仓库只给出概念性的说明。
+
+插件作者只需了解：有 `sdk_permissions` 这回事，想用宿主服务必须先声明权限。
+
 ## 如何参与本仓库（官方 Hub）的贡献
 
 我们欢迎以下类型的贡献：
