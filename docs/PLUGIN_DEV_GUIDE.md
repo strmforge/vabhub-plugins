@@ -268,6 +268,234 @@ async def setup_plugin(ctx: PluginContext, bus: EventBus, sdk: VabHubSDK) -> Non
 "sdk_permissions": ["media.read", "download.write"]
 ```
 
+## 插件配置系统（config_schema + sdk.config）
+
+### 概念说明
+
+插件可以在 `plugin.json` 中通过 `config_schema` 声明自己的配置结构；VabHub Web 会自动渲染表单并存储配置；插件在运行时通过 `sdk.config.get()` 读取生效配置。
+
+### JSON 示例
+
+```json
+{
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "title": "启用",
+        "default": true
+      },
+      "api_key": {
+        "type": "string",
+        "title": "API Key",
+        "description": "第三方服务 API 密钥"
+      },
+      "max_items": {
+        "type": "integer",
+        "title": "最多处理条数",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 10
+      }
+    },
+    "required": ["enabled"]
+  }
+}
+```
+
+### 代码示例
+
+```python
+async def setup_plugin(ctx, bus, sdk):
+    config = await sdk.config.get()
+    if not config.get("enabled", True):
+        sdk.log.info("Plugin disabled via config")
+        return
+    
+    api_key = config.get("api_key")
+    max_items = config.get("max_items", 10)
+    
+    sdk.log.info(f"Plugin enabled with max_items={max_items}")
+    # 插件逻辑...
+```
+
+**注意**：配置存储由主系统负责，不建议插件自己乱写文件。
+
+## 插件 Dashboard 面板（get_dashboard）
+
+### 概念说明
+
+插件可以实现 `get_dashboard(sdk)`，返回一份"Dashboard Schema"，前端会自动渲染成卡片/表格/文本/按钮。
+
+### 支持的 Widget 类型
+
+- `stat_card`：统计卡片（title/value/unit）
+- `table`：表格（columns + rows）
+- `text`：纯文本或 Markdown 文本
+- `action_button`：按钮，点击后调用某个 API
+
+### 伪代码示例
+
+```python
+from app.plugin_sdk.types import PluginDashboardWidgetType
+
+def get_dashboard(sdk):
+    return {
+        "widgets": [
+            {
+                "id": "stat_jobs",
+                "type": "stat_card",
+                "title": "已处理任务",
+                "value": "42",
+                "unit": "个"
+            },
+            {
+                "id": "recent_logs",
+                "type": "text",
+                "title": "最近状态",
+                "markdown": "插件正在正常运行，没有错误。"
+            },
+            {
+                "id": "refresh_button",
+                "type": "action_button",
+                "title": "刷新数据",
+                "text": "立即刷新",
+                "action": "refresh_data"
+            }
+        ]
+    }
+```
+
+**注意**：详细 schema 字段说明以主仓库 `PLUGIN_SDK_OVERVIEW.md` 中的 Dashboard 章节为准。
+
+## 插件对外 HTTP API（get_routes）
+
+### 概念说明
+
+插件可以通过实现 `get_routes(sdk)` 声明一些自定义 HTTP API；VabHub 会把这些路由挂载到统一前缀下（例如 `/api/plugin/{plugin_id}/...`），前端和其他工具可以调用。
+
+### 示例
+
+```python
+from app.plugin_sdk.types import PluginRoute
+
+def get_routes(sdk):
+    async def hello_handler(request, sdk):
+        return {"message": "hello from plugin", "status": "ok"}
+
+    async def stats_handler(request, sdk):
+        # 返回插件统计信息
+        return {"processed_items": 42, "last_run": "2024-01-15T10:30:00Z"}
+
+    return [
+        PluginRoute(
+            path="hello",
+            method="GET",
+            summary="Say hello",
+            handler=hello_handler,
+        ),
+        PluginRoute(
+            path="stats",
+            method="GET",
+            summary="Get plugin statistics",
+            handler=stats_handler,
+        )
+    ]
+```
+
+### 安全说明
+
+- 默认只允许已登录的管理员访问这些 API
+- 不建议插件自己实现鉴权逻辑
+- 所有 API 调用都会被记录审计日志
+
+## 远程插件（plugin_type=remote）
+
+### 概念说明
+
+远程插件的代码不在 VabHub 进程里运行，而是在另一个 HTTP 服务中；VabHub 会把事件通过 HTTP 推送到远程服务。
+
+### plugin.json 配置
+
+```json
+{
+  "id": "vabhub.remote_example",
+  "plugin_type": "remote",
+  "name": "Remote Example Plugin",
+  "summary": "远程插件示例",
+  "version": "1.0.0",
+  "channel": "community",
+  "author_name": "Example Author",
+  "author_url": "https://github.com/example",
+  "repo_url": "https://github.com/example/remote-plugin",
+  "remote": {
+    "base_url": "https://my-remote-plugin.example.com",
+    "timeout": 5,
+    "events": ["manga.updated", "audiobook.tts_finished"]
+  },
+  "sdk_permissions": ["media.read"]
+}
+```
+
+### 远程端期待的接口
+
+#### 接收事件：`POST /events`
+
+请求体格式：
+```json
+{
+  "plugin_id": "vabhub.remote_example",
+  "event": "manga.updated",
+  "payload": {
+    "manga_id": "12345",
+    "title": "Example Manga",
+    "chapter": 42
+  },
+  "timestamp": "2024-01-15T10:30:00Z"
+}
+```
+
+响应格式：
+```json
+{"status": "ok"}
+```
+或
+```json
+{"status": "ignored", "message": "event not handled"}
+```
+
+### 注意事项
+
+- 远程插件通常不会直接访问宿主内部 API
+- 如需调用宿主功能，需使用暴露的 HTTP/GraphQL 接口
+- 建议使用 HTTPS 和适当的认证机制
+
+## 安全、审计与责任说明
+
+### 官方 vs 社区插件
+
+- **官方插件**：由 VabHub 官方维护，`channel` 为 `official`
+- **社区插件**：由第三方开发者维护，`channel` 为 `community`，风险自担
+
+### 宿主系统的安全措施
+
+- **权限声明**：插件操作必须通过 `sdk_permissions` 声明所需权限
+- **权限分级**：分为"安全能力"和"高危能力"，高危权限需要用户确认
+- **审计记录**：部分写操作会被审计记录（例如下载任务、115操作）
+- **错误隔离**：出现频繁错误的插件有可能被系统自动隔离
+- **健康状态**：系统会监控插件的运行状态，异常插件会被标记
+
+### 责任说明
+
+**重要提示**：官方插件源会尽力审查，但仍不能 100% 保证第三方代码无问题，请谨慎安装社区插件。
+
+插件作者应：
+- 只申请真正需要的权限
+- 遵循最佳安全实践
+- 定期更新插件以修复安全问题
+- 提供清晰的功能说明和使用文档
+
 ## 完整插件示例
 
 以下是一个完整的插件示例，展示基本的开发模式：

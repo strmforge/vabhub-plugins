@@ -72,6 +72,7 @@
 | **channel** | string | ✅ | 插件频道，必须是 `"official"` 或 `"community"` |
 | **tags** | string[] | 可选 | 标签数组，用于分类和搜索 |
 | **features** | string[] | 可选 | 功能特性数组，声明插件支持的功能类型 |
+| **subscribed_events** | string[] | 可选 | 插件订阅的事件列表，便于 UI 展示（可选，实际以代码为准） |
 
 ### 链接信息
 
@@ -79,6 +80,15 @@
 |------|------|------|------|
 | **homepage** | string | 可选 | 插件主页 URL，可以是 null |
 | **readme_url** | string | 可选 | 插件文档链接，必须是有效的 HTTP(S) URL，可以是 null |
+
+### 插件配置与权限
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| **sdk_permissions** | string[] | 可选 | 声明插件可使用的宿主能力，有"安全能力"和"高危能力"区分，未声明则无法调用对应 SDK 方法 |
+| **config_schema** | object | 可选 | 简化版 JSON Schema，用于 VabHub Web 自动渲染插件配置表单 |
+| **plugin_type** | string | 可选 | 插件类型，`"local"`（默认）或 `"remote"` |
+| **remote** | object | 可选 | 仅 remote 插件使用，包含 base_url、timeout、events 等配置 |
 
 ### 扩展信息
 
@@ -107,6 +117,81 @@
   - `"ui_panels"`: UI 面板扩展
   - `"workflows"`: Workflow 扩展
 - **用途**: 声明插件支持的功能类型，便于主程序按需加载
+
+#### sdk_permissions
+- **类型**: string[]，权限标识符数组
+- **安全等级**: 分为"安全能力"（如 `media.read`）和"高危能力"（如 `download.write`、`cloud115.task`）
+- **强制检查**: 未声明的权限无法调用对应 SDK 方法，会在运行时收到权限拒绝错误
+- **常用权限**:
+  - `media.read`: 媒体库查询权限
+  - `download.read/download.write`: 下载任务管理权限
+  - `cloud115.read/cloud115.task`: 115 云存储权限
+- **用途**: 安全机制，让用户明确了解插件请求的权限范围
+
+#### config_schema
+- **类型**: object，简化版 JSON Schema
+- **用途**: 用于 VabHub Web 自动渲染插件配置表单
+- **支持的基础类型**: `string`、`number`、`integer`、`boolean`、`array`
+- **支持的属性**: `title`、`description`、`enum`、`minimum`、`maximum`、`default`
+- **示例**:
+```json
+{
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "title": "启用插件",
+        "default": true
+      },
+      "api_key": {
+        "type": "string",
+        "title": "API Key",
+        "description": "第三方服务密钥"
+      },
+      "max_items": {
+        "type": "integer",
+        "title": "最大处理条数",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 10
+      }
+    },
+    "required": ["enabled"]
+  }
+}
+```
+
+#### plugin_type
+- **可选值**: 
+  - `"local"`: 本地 Python 插件（默认）
+  - `"remote"`: 远程 HTTP 插件
+- **用途**: 区分插件运行模式
+- **local**: 插件代码在 VabHub 容器内运行
+- **remote**: 插件作为独立 HTTP 服务运行，VabHub 通过 HTTP 调用
+
+#### remote
+- **适用范围**: 仅当 `plugin_type` 为 `"remote"` 时必填
+- **推荐字段**:
+  - `base_url`: 远程插件服务根地址（string，必填）
+  - `timeout`: 请求超时时间（number，可选，默认 5 秒）
+  - `events`: 该远程插件希望订阅的事件列表（string[]，可选）
+  - `auth_token`: 认证令牌（string，可选）
+- **示例**:
+```json
+{
+  "remote": {
+    "base_url": "https://my-plugin.example.com",
+    "timeout": 10,
+    "events": ["manga.updated", "audiobook.tts_finished"]
+  }
+}
+```
+
+#### subscribed_events
+- **用途**: 声明插件在事件总线中会订阅哪些事件，便于 UI 展示
+- **可选性**: 此字段为可选，实际事件订阅以代码为准
+- **示例**: `["manga.updated", "download.completed", "user.login"]`
 
 #### extra
 - **常用字段**: 

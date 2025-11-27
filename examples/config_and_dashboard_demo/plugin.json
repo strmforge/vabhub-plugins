@@ -1,0 +1,56 @@
+{
+  "id": "demo.config_dashboard",
+  "plugin_type": "local",
+  "name": "Config & Dashboard Demo",
+  "summary": "演示插件配置系统和 Dashboard 面板功能的示例",
+  "description": "这是一个完整的示例插件，展示了如何使用 config_schema 定义配置表单，通过 get_dashboard 提供 UI 面板，以及实现对外 API 接口。",
+  "version": "1.0.0",
+  "repo_url": "https://github.com/vabhub/config-dashboard-demo",
+  "author_name": "VabHub 官方",
+  "author_url": "https://github.com/strmforge",
+  "channel": "official",
+  "tags": ["example", "demo", "config", "dashboard"],
+  "sdk_permissions": ["media.read"],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "title": "启用插件",
+        "description": "是否启用此插件的功能",
+        "default": true
+      },
+      "max_items_per_batch": {
+        "type": "integer",
+        "title": "每批最大处理数量",
+        "description": "单次批处理最多处理的条目数量",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 10
+      },
+      "processing_mode": {
+        "type": "string",
+        "title": "处理模式",
+        "description": "选择不同的处理策略",
+        "enum": ["fast", "balanced", "thorough"],
+        "default": "balanced"
+      },
+      "api_key": {
+        "type": "string",
+        "title": "API 密钥（可选）",
+        "description": "如果需要调用外部服务，请提供 API 密钥"
+      },
+      "enable_notifications": {
+        "type": "boolean",
+        "title": "启用通知",
+        "description": "处理完成后是否发送通知",
+        "default": true
+      }
+    },
+    "required": ["enabled", "max_items_per_batch"]
+  },
+  "subscribed_events": [
+    "manga.updated",
+    "audiobook.tts_finished"
+  ]
+}

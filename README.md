@@ -213,6 +213,17 @@ def setup_plugin(ctx: PluginContext, bus: EventBus, sdk: VabHubSDK) -> None:
 
 插件作者只需了解：有 `sdk_permissions` 这回事，想用宿主服务必须先声明权限。
 
+### 高级能力一览
+
+VabHub 插件系统提供丰富的高级功能：
+
+- **插件配置系统**：通过 `config_schema` 自动生成 Web 表单 + `sdk.config` 运行时读取
+- **Dashboard 面板 DSL**：通过 `get_dashboard` 提供统计卡片、表格、文本、按钮等组件
+- **插件对外 API**：通过 `get_routes` 暴露自定义 HTTP API，挂载到统一前缀
+- **权限机制**：`sdk_permissions` 声明所需权限，区分安全能力和高危能力
+- **安全 & 审计**：错误隔离、审计日志、健康状态监控
+- **远程插件**：`plugin_type=remote` 支持，事件 HTTP 推送模式，跨语言支持
+
 ## 如何参与本仓库（官方 Hub）的贡献
 
 我们欢迎以下类型的贡献：
@@ -289,10 +300,11 @@ vabhub-plugins/
 
 ## 开发者文档
 
-- [插件索引规范](docs/PLUGIN_INDEX_SPEC.md) - plugins.json 格式规范
-- [插件开发指南（基于 SDK + 事件系统）](docs/PLUGIN_DEV_GUIDE.md) - 插件开发使用 SDK 的说明
+- [插件索引规范](docs/PLUGIN_INDEX_SPEC.md) - 完整的 plugins.json 字段规范，包含配置、Dashboard、远程插件等
+- [插件开发指南](docs/PLUGIN_DEV_GUIDE.md) - 基础 SDK + 事件系统 + 配置 + Dashboard + API + 安全
+- [远程插件开发指南](docs/PLUGIN_REMOTE_GUIDE.md) - 远程 HTTP 插件的完整开发协议和示例
 - [第三方 Hub 指南](docs/THIRD_PARTY_HUB_GUIDE.md) - 创建和维护自己的插件 Hub
-- [示例插件](examples/sdk_event_demo/) - 基于 SDK + EventBus 的开发示例
+- [示例插件](examples/sdk_event_demo/) - 基础事件订阅示例
 
 ## 联系我们
 
